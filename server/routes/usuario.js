@@ -1,12 +1,15 @@
 const express = require('express');
+
 const bcrypt = require('bcrypt');
 const _ = require('underscore');
+
 const Usuario = require('../models/usuario');
+const { verificarToken, verificarAdmin_Role } = require('../middlewares/authentication')
 
 const app = express();
 
 
-app.get('/usuario', function (req, res) {
+app.get('/usuario', verificarToken, (req, res) => {
 
     let filtro = { estado: true }
 
@@ -22,7 +25,7 @@ app.get('/usuario', function (req, res) {
             .exec( (err, usuarios) => {
 
                 if ( err ) {
-                    res.status(400).json({
+                    return res.status(400).json({
                         ok: false,
                         err
                     });
@@ -41,7 +44,7 @@ app.get('/usuario', function (req, res) {
 
 });
    
-app.post('/usuario', function (req, res) {
+app.post('/usuario', [verificarToken, verificarAdmin_Role], (req, res) => {
 
     let body = req.body
 
@@ -55,7 +58,7 @@ app.post('/usuario', function (req, res) {
     usuario.save( (err, usuarioDB) => {
 
         if ( err ) {
-            res.status(400).json({
+            return res.status(400).json({
                 ok: false,
                 err
             });
@@ -70,7 +73,7 @@ app.post('/usuario', function (req, res) {
 
 });
 
-app.put('/usuario/:id', function (req, res) {
+app.put('/usuario/:id',  [verificarToken, verificarAdmin_Role], (req, res) => {
 
     let id = req.params.id;
     let body = _.pick( req.body, ['nombre','email','img','role','estado'] );
@@ -78,7 +81,7 @@ app.put('/usuario/:id', function (req, res) {
     Usuario.findByIdAndUpdate( id, body, {new: true, runValidators: true, context: 'query' }, (err, usuarioDB) => {
 
         if ( err ) {
-            res.status(400).json({
+            return res.status(400).json({
                 ok: false,
                 err
             });
@@ -93,7 +96,7 @@ app.put('/usuario/:id', function (req, res) {
 });
 
 
-app.delete('/usuario/:id', function (req, res) {
+app.delete('/usuario/:id',  [verificarToken, verificarAdmin_Role], (req, res) => {
     
     let id = req.params.id;
 
@@ -104,14 +107,14 @@ app.delete('/usuario/:id', function (req, res) {
     // Usuario.findByIdAndRemove(id, (err, usuarioBorrado) => {
     Usuario.findByIdAndUpdate(id, cambioEstado, { new: true } , (err, usuarioBorrado) => {
         if ( err ) {
-            res.status(400).json({
+            return res.status(400).json({
                 ok: false,
                 err
             });
         }
 
         if ( !usuarioBorrado ) {
-            res.status(400).json({
+            return res.status(400).json({
                 ok: false,
                 err: {
                     message: 'Usuario no encontrado'
