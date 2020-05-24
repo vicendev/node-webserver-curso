@@ -25,7 +25,7 @@ app.get('/usuario', verificarToken, (req, res) => {
             .exec( (err, usuarios) => {
 
                 if ( err ) {
-                    return res.status(400).json({
+                    return res.status(500).json({
                         ok: false,
                         err
                     });
